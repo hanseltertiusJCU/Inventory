@@ -23,7 +23,7 @@ public class InventoryContract {
 
         public final static String COLUMN_INVENTORY_PHONE_NUMBER = "phone_number";
 
-        public final static String COLUMN_INVENTORY_PHONE_EMAIL = "email";
+        public final static String COLUMN_INVENTORY_EMAIL = "email";
 
     }
 }

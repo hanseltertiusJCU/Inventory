@@ -1,5 +1,6 @@
 package com.example.android.inventory;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -16,6 +17,8 @@ import com.example.android.inventory.data.InventoryDbHelper;
 
 public class MainActivity extends AppCompatActivity {
 
+    private InventoryDbHelper inventoryDbHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,6 +33,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // To access our database, we instantiate the child class of SQLiteOpenHelper
+        // and pass the context, which is the current activity.
+        inventoryDbHelper = new InventoryDbHelper(this);
+
         displayDbInfo();
     }
 
@@ -38,9 +45,6 @@ public class MainActivity extends AppCompatActivity {
      * the pets database.
      */
     private void displayDbInfo(){
-        // To access our database, we instantiate the child class of SQLiteOpenHelper
-        // and pass the context, which is the current activity.
-        InventoryDbHelper inventoryDbHelper = new InventoryDbHelper(this);
 
         // Create and/or open a database to read from it
         SQLiteDatabase db = inventoryDbHelper.getReadableDatabase();
@@ -62,6 +66,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Helper method to insert hardcoded dummy inventory data into the database.
+     */
+    private void insertInventory(){
+        // Gets the database in write mode
+        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
+
+        // Create a ContentValues object where column names are the keys,
+        // and Samsung TV's attributes are the values.
+        ContentValues dummyValues = new ContentValues();
+        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_BRAND, "Samsung");
+        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, "32” Class N5300");
+        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, 199.99);
+        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_QUANTITY, 2);
+        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, "(888) 3386902");
+        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, "samsungbusiness@gmail.com");
+
+        // Insert a new row for Samsung TV's in the database, returning the ID of that new row.
+        // *) The first argument for db.insert() is the inventories table name.
+        // *) The second argument provides the name of a column in which the framework
+        // can insert NULL in the event that the ContentValues is empty, which means that the
+        // framework will not insert a row when there are no values.
+        // *) The third argument is the ContentValues object containing the info for Samsung TV.
+        long newRowId = db.insert(InventoryEntry.TABLE_NAME, null, dummyValues);
+
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_main.xml file.
@@ -76,6 +107,8 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()){
             // Respond when clicked "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
+                insertInventory();
+                displayDbInfo();
                 return true;
             // Respond when clicked "Delete all inventories" menu option
             case R.id.action_delete_all_entries:

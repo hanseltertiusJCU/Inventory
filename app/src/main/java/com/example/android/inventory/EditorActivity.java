@@ -1,5 +1,7 @@
 package com.example.android.inventory;
 
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,6 +9,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
+
+import com.example.android.inventory.data.InventoryContract.InventoryEntry;
+import com.example.android.inventory.data.InventoryDbHelper;
 
 public class EditorActivity extends AppCompatActivity {
 
@@ -44,6 +50,53 @@ public class EditorActivity extends AppCompatActivity {
         mEmailEditText = (EditText) findViewById(R.id.edit_product_email);
     }
 
+    /**
+     * Get user input from editor and save new inventory into database.
+     */
+    private void insertInventory(){
+        // Read from input fields
+        // Use trim to eliminate leading or trailing white space
+        String brandString = mBrandEditText.getText().toString().trim();
+        String nameString = mNameEditText.getText().toString().trim();
+        String priceString = mPriceEditText.getText().toString().trim();
+        double priceValue = Double.parseDouble(priceString);
+        String quantityString = mQuantityEditText.getText().toString().trim();
+        int quantityValue = Integer.parseInt(quantityString);
+        String phoneString = mPhoneNumberEditText.getText().toString().trim();
+        String emailString = mEmailEditText.getText().toString().trim();
+
+        // Create database helper
+        InventoryDbHelper inventoryDbHelper = new InventoryDbHelper(this);
+
+        // Get the database in write mode
+        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
+
+        // Create a ContentValues object where column names are the keys,
+        // and inventory attributes from the editor are the values.
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_BRAND, brandString);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, nameString);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, priceValue);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_QUANTITY, quantityValue);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, phoneString);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
+
+        // Insert a new row for inventory in the database, returning the ID of that new row.
+        long newRowId = db.insert(InventoryEntry.TABLE_NAME, null, contentValues);
+
+        // Show a toast message depending on whether or not the insertion was successful
+        if (newRowId == -1) {
+            // If the row ID is -1, then there was an error with insertion.
+            Toast.makeText(this, "Error with saving inventory",
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            // Otherwise, the insertion was successful and we can display a toast with the row ID.
+            Toast.makeText(this, "Inventory saved with row id: " +
+                    newRowId, Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_editor.xml file.
@@ -58,7 +111,8 @@ public class EditorActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                // Do nothing for now
+                insertInventory();
+                finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:

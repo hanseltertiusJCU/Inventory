@@ -37,6 +37,12 @@ public class MainActivity extends AppCompatActivity {
         // and pass the context, which is the current activity.
         inventoryDbHelper = new InventoryDbHelper(this);
 
+
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         displayDbInfo();
     }
 

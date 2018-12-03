@@ -279,7 +279,7 @@ public class InventoryProvider extends ContentProvider {
      */
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        // Get writeable database
+        // Get writable database
         SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
 
         final int match = uriMatcher.match(uri);
@@ -304,6 +304,16 @@ public class InventoryProvider extends ContentProvider {
      */
     @Override
     public String getType(Uri uri) {
-        return null;
+        final int match = uriMatcher.match(uri);
+        switch (match){
+            case INVENTORIES:
+                // Return the list type that shows whole list of items
+                return InventoryEntry.CONTENT_LIST_TYPE;
+            case INVENTORY_ID:
+                // Return the item type that shows single item
+                return InventoryEntry.CONTENT_ITEM_TYPE;
+            default:
+                throw new IllegalStateException("Unknown URI " + uri + "with match " + match);
+        }
     }
 }

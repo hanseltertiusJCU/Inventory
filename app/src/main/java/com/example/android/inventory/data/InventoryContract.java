@@ -1,5 +1,6 @@
 package com.example.android.inventory.data;
 
+import android.content.ContentResolver;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -38,6 +39,14 @@ public class InventoryContract {
         public final static String COLUMN_INVENTORY_PHONE_NUMBER = "phone_number";
 
         public final static String COLUMN_INVENTORY_EMAIL = "email";
+
+        /** The MIME type of the {@link #CONTENT_URI} for a list of inventories.*/
+        public static final String CONTENT_LIST_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" +
+                CONTENT_AUTHORITY + "/" + PATH_INVENTORIES;
+
+        /** The MIME type of the {@link #CONTENT_URI} for a single inventory.*/
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" +
+                CONTENT_AUTHORITY + "/" + PATH_INVENTORIES;
 
     }
 }

@@ -178,7 +178,100 @@ public class InventoryProvider extends ContentProvider {
      */
     @Override
     public int update(Uri uri, ContentValues contentValues, String selection, String[] selectionArgs) {
-        return 0;
+        final int match = uriMatcher.match(uri);
+        switch (match){
+            case INVENTORIES:
+                return updateInventory(uri, contentValues, selection, selectionArgs);
+            case INVENTORY_ID:
+                // For the INVENTORY_ID code, extract out the ID from the URI.
+                // For an example URI such as "content://com.example.android.inventory/inventories/3",
+                // the selection will be "_id=?" and the selection argument will be a
+                // String array containing the actual ID of 3 in this case.
+                selection = InventoryEntry._ID + "=?";
+                selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
+                return updateInventory(uri, contentValues, selection, selectionArgs);
+            default:
+                throw new IllegalArgumentException("Update is not supported for " + uri);
+        }
+    }
+
+    /**
+     * Update inventory in the database with the given content values. Apply the changes to the rows
+     * specified in the selection and selection arguments (which could be 0 or 1 or more inventories).
+     * Return the number of rows that were successfully updated.
+     */
+    private int updateInventory(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+
+        // Check if the updated value involves the respective key(s)
+        if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_BRAND)){
+            // Check if brand is not null
+            String brand = values.getAsString(InventoryEntry.COLUMN_INVENTORY_BRAND);
+            if (brand == null) {
+                throw new IllegalArgumentException("Inventory requires the brand value.");
+            }
+        }
+
+        if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_NAME)){
+            // Check if name is not null
+            String brand = values.getAsString(InventoryEntry.COLUMN_INVENTORY_NAME);
+            if (brand == null) {
+                throw new IllegalArgumentException("Inventory requires the name value.");
+            }
+        }
+
+        if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_PRICE)){
+            // Check that the price is more than or equal to 0
+            Double price = values.getAsDouble(InventoryEntry.COLUMN_INVENTORY_PRICE);
+            if (price != null && price < 0){
+                throw new IllegalArgumentException("The price for inventory must be 0 or more.");
+            }
+        }
+
+        if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_QUANTITY)){
+            // Check that the quantity is more than or equal to 0
+            Integer quantity = values.getAsInteger(InventoryEntry.COLUMN_INVENTORY_QUANTITY);
+            if (quantity != null && quantity < 0){
+                throw new IllegalArgumentException("The quantity for inventory must be 0 or more.");
+            }
+        }
+
+        if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER)){
+            // Check that the phone number is not null
+            String phoneNumber = values.getAsString(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER);
+            if (phoneNumber == null){
+                throw new IllegalArgumentException("Inventory requires the supplier phone number.");
+            }
+        }
+
+        if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_EMAIL)){
+            // Check that the e-mail is not null
+            String email = values.getAsString(InventoryEntry.COLUMN_INVENTORY_EMAIL);
+            if (email == null){
+                throw new IllegalArgumentException("Inventory requires the supplier email.");
+            }
+        }
+
+        // Get writable database by calling getWritableDatabase method
+        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
+
+        // Call the SQLiteDatabase update method to return how many row(s) is/are updated
+        int updatedRows = db.update(InventoryEntry.TABLE_NAME, values, selection, selectionArgs);
+
+        // If there is no ContentValues to update, then return no updated rows (updatedRows = 0)
+        if (values.size() == 0){
+            return 0;
+        }
+
+        // If 1 or more rows were updated, then notify all listeners that the data at the
+        // given URI has changed
+        if (updatedRows != 0){
+            // Notify the listeners that the data has changed for the pet content URI
+            // uri: content://com.example.android.inventory/inventories
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        // Return the number of updated rows
+        return updatedRows;
     }
 
     /**

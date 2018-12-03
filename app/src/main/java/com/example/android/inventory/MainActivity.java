@@ -52,9 +52,6 @@ public class MainActivity extends AppCompatActivity {
      */
     private void displayDbInfo(){
 
-        // Create and/or open a database to read from it
-        SQLiteDatabase db = inventoryDbHelper.getReadableDatabase();
-
         // Define a projection that specifies which columns from the database
         // you will actually use after this query.
         String[] projection = {
@@ -68,13 +65,11 @@ public class MainActivity extends AppCompatActivity {
         };
 
 
-        // Perform a query on inventories table
-        Cursor cursor = db.query(InventoryEntry.TABLE_NAME, // the table to query
+        // Perform a query on content URI
+        Cursor cursor = getContentResolver().query(InventoryEntry.CONTENT_URI, // the URI to query
                 projection, // The columns to return
                 null, // The columns for WHERE clause
                 null, // The values for WHERE clause
-                null, // Group the rows, in this case we don't even group it
-                null, // Filter the row groups, in this case we don't even filter it
                 null // The sort order
         );
 

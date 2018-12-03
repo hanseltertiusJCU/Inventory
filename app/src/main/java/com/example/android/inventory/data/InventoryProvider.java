@@ -7,6 +7,8 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
@@ -105,7 +107,70 @@ public class InventoryProvider extends ContentProvider {
      */
     @Override
     public Uri insert(Uri uri, ContentValues contentValues) {
-        return null;
+        final int match = uriMatcher.match(uri);
+        switch (match) {
+            case INVENTORIES:
+                return insertInventory(uri, contentValues);
+            default:
+                throw new IllegalArgumentException("Insertion is not supported for " + uri);
+        }
+
+    }
+
+    private Uri insertInventory(Uri uri, ContentValues values){
+
+        // Create and/or open a database to write from it
+        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
+
+        // Check that the brand is not null
+        String brand = values.getAsString(InventoryEntry.COLUMN_INVENTORY_BRAND);
+        if (brand == null){
+            throw new IllegalArgumentException("Inventory requires the brand value.");
+        }
+
+        // Check that the name is not null
+        String name = values.getAsString(InventoryEntry.COLUMN_INVENTORY_NAME);
+        if (name == null){
+            throw new IllegalArgumentException("Inventory requires the name value.");
+        }
+
+        // Check that the price is more than or equal to 0
+        Double price = values.getAsDouble(InventoryEntry.COLUMN_INVENTORY_PRICE);
+        if (price != null && price < 0){
+            throw new IllegalArgumentException("The price for inventory must be 0 or more.");
+        }
+
+        // Check that the quantity is more than or equal to 0
+        Integer quantity = values.getAsInteger(InventoryEntry.COLUMN_INVENTORY_QUANTITY);
+        if (quantity != null && quantity < 0){
+            throw new IllegalArgumentException("The quantity for inventory must be 0 or more.");
+        }
+
+        // Check that the phone number is not null
+        String phoneNumber = values.getAsString(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER);
+        if (phoneNumber == null){
+            throw new IllegalArgumentException("Inventory requires the supplier phone number.");
+        }
+
+        // Check that the e-mail is not null
+        String email = values.getAsString(InventoryEntry.COLUMN_INVENTORY_EMAIL);
+        if (email == null){
+            throw new IllegalArgumentException("Inventory requires the supplier email.");
+        }
+
+        // By calling the insert method, we return the id in order to return the URI with the id
+        // and to get the new inventory
+        long id = db.insert(InventoryEntry.TABLE_NAME, null, values);
+
+        // If the ID is -1, then the insertion failed. Log an error and return null.
+        if (id == -1) {
+            Log.e(LOG_TAG, "Failed to insert row for " + uri);
+            return null;
+        }
+
+        // Once we know the ID of the new row in the table,
+        // return the new URI with the ID appended to the end of it
+        return ContentUris.withAppendedId(uri, id);
     }
 
     /**

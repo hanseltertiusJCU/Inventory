@@ -123,12 +123,13 @@
                 android:id="@+id/decrease_quantity_button"
                 android:text="-" />
 
-            <!-- Product price field -->
+            <!-- Product quantity field -->
             <EditText
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:id="@+id/edit_product_quantity"
+                android:text="1"
                 android:hint="1"
                 android:gravity="center_horizontal"
                 android:inputType="number" />

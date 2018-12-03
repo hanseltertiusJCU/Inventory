@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,6 +19,8 @@ import com.example.android.inventory.data.InventoryDbHelper;
 public class MainActivity extends AppCompatActivity {
 
     private InventoryDbHelper inventoryDbHelper;
+
+    private Uri newUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,9 +131,6 @@ public class MainActivity extends AppCompatActivity {
      * Helper method to insert hardcoded dummy inventory data into the database.
      */
     private void insertInventory(){
-        // Gets the database in write mode
-        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
-
         // Create a ContentValues object where column names are the keys,
         // and Samsung TV's attributes are the values.
         ContentValues dummyValues = new ContentValues();
@@ -142,12 +142,9 @@ public class MainActivity extends AppCompatActivity {
         dummyValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, "samsungbusiness@gmail.com");
 
         // Insert a new row for Samsung TV's in the database, returning the ID of that new row.
-        // *) The first argument for db.insert() is the inventories table name.
-        // *) The second argument provides the name of a column in which the framework
-        // can insert NULL in the event that the ContentValues is empty, which means that the
-        // framework will not insert a row when there are no values.
-        // *) The third argument is the ContentValues object containing the info for Samsung TV.
-        long newRowId = db.insert(InventoryEntry.TABLE_NAME, null, dummyValues);
+        // *) The first argument for db.insert() is the content URI from InventoryEntry.
+        // *) The second argument is the ContentValues object containing the info for Samsung TV.
+        newUri = getContentResolver().insert(InventoryEntry.CONTENT_URI, dummyValues);
 
     }
 

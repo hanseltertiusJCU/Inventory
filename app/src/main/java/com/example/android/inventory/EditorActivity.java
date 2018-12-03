@@ -1,18 +1,20 @@
 package com.example.android.inventory;
 
 import android.content.ContentValues;
-import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
-import com.example.android.inventory.data.InventoryDbHelper;
 
 public class EditorActivity extends AppCompatActivity {
 
@@ -34,6 +36,9 @@ public class EditorActivity extends AppCompatActivity {
     /** EditText field to enter the inventory's E-mail */
     private EditText mEmailEditText;
 
+    /** int value for setup default quantity */
+    private int quantityInventory;
+
 
 
     @Override
@@ -48,6 +53,37 @@ public class EditorActivity extends AppCompatActivity {
         mQuantityEditText = (EditText) findViewById(R.id.edit_product_quantity);
         mPhoneNumberEditText = (EditText) findViewById(R.id.edit_product_phone_number);
         mEmailEditText = (EditText) findViewById(R.id.edit_product_email);
+
+        // Setup string value to get the default text of EditText value
+        String value = mQuantityEditText.getText().toString();
+
+        // Set the value for int variable based on default text
+        quantityInventory = Integer.parseInt(value);
+
+        // Reference to button
+        Button quantityDownButton = (Button) findViewById(R.id.decrease_quantity_button);
+        Button quantityUpButton = (Button) findViewById(R.id.increase_quantity_button);
+
+        quantityDownButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(quantityInventory > 0){
+                    quantityInventory -= 1;
+                    mQuantityEditText.setText("" + quantityInventory);
+                } else {
+                    Toast.makeText(getApplicationContext(), "Cannot enter negative values, " +
+                            "the quantity must be more than or equal to 0", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        quantityUpButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                quantityInventory += 1;
+                mQuantityEditText.setText("" + quantityInventory);
+            }
+        });
     }
 
     /**
@@ -59,17 +95,69 @@ public class EditorActivity extends AppCompatActivity {
         String brandString = mBrandEditText.getText().toString().trim();
         String nameString = mNameEditText.getText().toString().trim();
         String priceString = mPriceEditText.getText().toString().trim();
-        double priceValue = Double.parseDouble(priceString);
+        double priceValue;
+        // Check if priceString has values, if not set the price value to 0
+        if(priceString.length() != 0){
+            priceValue = Double.parseDouble(priceString);
+        } else {
+            priceValue = 0;
+        }
+
+        int quantityValue;
         String quantityString = mQuantityEditText.getText().toString().trim();
-        int quantityValue = Integer.parseInt(quantityString);
+        // Check if quantityString has values, if not set the price value to 0
+        if(quantityString.length() != 0){
+            quantityValue = Integer.parseInt(quantityString);
+        } else {
+            quantityValue = 0;
+        }
         String phoneString = mPhoneNumberEditText.getText().toString().trim();
         String emailString = mEmailEditText.getText().toString().trim();
 
-        // Create database helper
-        InventoryDbHelper inventoryDbHelper = new InventoryDbHelper(this);
+        // Use toast message when there is no string value in edit text
+        if (TextUtils.isEmpty(brandString)){
+            Toast.makeText(this, "Cannot enter empty brand value. " +
+                            "Please insert a brand." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        // Get the database in write mode
-        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
+        if (TextUtils.isEmpty(nameString)){
+            Toast.makeText(this, "Cannot enter empty name value. " +
+                            "Please insert a name." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(priceString)){
+            Toast.makeText(this, "Cannot enter empty price value. " +
+                            "Please insert the appropriate price value." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(quantityString)){
+            Toast.makeText(this, "Cannot enter empty quantity value. " +
+                            "Please insert the appropriate quantity." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(phoneString)){
+            Toast.makeText(this, "Cannot enter empty phone number. " +
+                            "Please insert your supplier phone number." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(emailString)){
+            Toast.makeText(this, "Cannot enter empty email. " +
+                            "Please insert your supplier email." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+
 
         // Create a ContentValues object where column names are the keys,
         // and inventory attributes from the editor are the values.
@@ -81,18 +169,16 @@ public class EditorActivity extends AppCompatActivity {
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, phoneString);
         contentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
 
-        // Insert a new row for inventory in the database, returning the ID of that new row.
-        long newRowId = db.insert(InventoryEntry.TABLE_NAME, null, contentValues);
+        Uri newUri = getContentResolver().insert(
+                InventoryEntry.CONTENT_URI,     // Content URI from InventoryEntry
+                contentValues                   // The values to insert
+        );
 
-        // Show a toast message depending on whether or not the insertion was successful
-        if (newRowId == -1) {
-            // If the row ID is -1, then there was an error with insertion.
-            Toast.makeText(this, "Error with saving inventory",
-                    Toast.LENGTH_SHORT).show();
+        // Check if the Uri resulted from insert method in content resolver is null.
+        if(newUri != null){
+            Toast.makeText(this, "Inventory successfully saved" , Toast.LENGTH_SHORT).show();
         } else {
-            // Otherwise, the insertion was successful and we can display a toast with the row ID.
-            Toast.makeText(this, "Inventory saved with row id: " +
-                    newRowId, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "There is an error with saving an inventory" , Toast.LENGTH_SHORT).show();
         }
 
     }

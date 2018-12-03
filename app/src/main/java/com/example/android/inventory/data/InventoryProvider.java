@@ -279,7 +279,24 @@ public class InventoryProvider extends ContentProvider {
      */
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        return 0;
+        // Get writeable database
+        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
+
+        final int match = uriMatcher.match(uri);
+        switch (match){
+            case INVENTORIES:
+                return db.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+            case INVENTORY_ID:
+                // For the INVENTORY_ID code, extract out the ID from the URI.
+                // For an example URI such as "content://com.example.android.inventory/inventories/3",
+                // the selection will be "_id=?" and the selection argument will be a
+                // String array containing the actual ID of 3 in this case.
+                selection = InventoryEntry._ID + "=?";
+                selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
+                return db.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+            default:
+                throw new IllegalArgumentException("Deletion is not supported for " + uri);
+        }
     }
 
     /**

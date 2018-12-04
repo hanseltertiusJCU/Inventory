@@ -98,6 +98,11 @@ public class InventoryProvider extends ContentProvider {
                 throw new IllegalArgumentException("Cannot query unknown URI" + uri);
         }
 
+        // Set notification URI on the Cursor
+        // so we know the content URI the Cursor was created for.
+        // If the data at this URI changes, then we know we need to update the Cursor.
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
 
         return cursor;
     }
@@ -167,6 +172,10 @@ public class InventoryProvider extends ContentProvider {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
         }
+
+        // Notify the listeners that the data has changed for the inventory content URI
+        // uri: content://com.example.android.inventory/inventories
+        getContext().getContentResolver().notifyChange(uri, null);
 
         // Once we know the ID of the new row in the table,
         // return the new URI with the ID appended to the end of it

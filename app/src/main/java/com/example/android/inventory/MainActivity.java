@@ -5,21 +5,27 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
-import com.example.android.inventory.data.InventoryDbHelper;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private InventoryDbHelper inventoryDbHelper;
+    /** Identifier for the inventory data loader */
+    private static final int INVENTORY_LOADER = 0;
+
+    private InventoryCursorAdapter inventoryCursorAdapter;
 
     private Uri newUri;
 
@@ -37,57 +43,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // To access our database, we instantiate the child class of SQLiteOpenHelper
-        // and pass the context, which is the current activity.
-        inventoryDbHelper = new InventoryDbHelper(this);
-
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        displayDbInfo();
-    }
-
-    /**
-     * Temporary helper method to display information in the onscreen TextView about the state of
-     * the pets database.
-     */
-    private void displayDbInfo(){
-
-        // Define a projection that specifies which columns from the database
-        // you will actually use after this query.
-        String[] projection = {
-                InventoryEntry._ID,
-                InventoryEntry.COLUMN_INVENTORY_BRAND,
-                InventoryEntry.COLUMN_INVENTORY_NAME,
-                InventoryEntry.COLUMN_INVENTORY_PRICE,
-                InventoryEntry.COLUMN_INVENTORY_QUANTITY,
-                InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER,
-                InventoryEntry.COLUMN_INVENTORY_EMAIL
-        };
-
-
-        // Perform a query on content URI
-        Cursor cursor = getContentResolver().query(
-                InventoryEntry.CONTENT_URI, // the URI to query
-                projection, // The columns to return
-                null, // The columns for WHERE clause
-                null, // The values for WHERE clause
-                null // The sort order
-        );
-
         // Find ListView to populate
         ListView listViewItems = (ListView) findViewById(R.id.list_view_inventory);
-        // Setup cursor adapter using cursor from last step
-        InventoryCursorAdapter inventoryCursorAdapter = new InventoryCursorAdapter(this, cursor);
-        // Attach cursor adapter to the ListView
-        listViewItems.setAdapter(inventoryCursorAdapter);
 
         // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
         View emptyView = findViewById(R.id.empty_view);
         listViewItems.setEmptyView(emptyView);
+
+        // Setup cursor adapter using cursor from last step
+        // There is no inventory data yet (until the loader finishes)
+        // so pass in null for the Cursor.
+        inventoryCursorAdapter = new InventoryCursorAdapter(this, null);
+        // Attach cursor adapter to the ListView
+        listViewItems.setAdapter(inventoryCursorAdapter);
+
+        // Initialize the loader
+        getSupportLoaderManager().initLoader(INVENTORY_LOADER, null, this);
 
     }
 
@@ -127,12 +98,48 @@ public class MainActivity extends AppCompatActivity {
             // Respond when clicked "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
                 insertInventory();
-                displayDbInfo();
                 return true;
             // Respond when clicked "Delete all inventories" menu option
             case R.id.action_delete_all_entries:
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, @Nullable Bundle bundle) {
+
+        // Define a projection that specifies which columns from the database
+        // you will actually use after this query.
+        String[] projection = {
+                InventoryEntry._ID,
+                InventoryEntry.COLUMN_INVENTORY_BRAND,
+                InventoryEntry.COLUMN_INVENTORY_NAME,
+                InventoryEntry.COLUMN_INVENTORY_PRICE,
+                InventoryEntry.COLUMN_INVENTORY_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER,
+                InventoryEntry.COLUMN_INVENTORY_EMAIL
+        };
+
+        // This loader will execute the ContentProvider's query method on a background thread
+        return new CursorLoader(this,
+                InventoryEntry.CONTENT_URI,
+                projection,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+        // Update {@link InventoryCursorAdapter} with this new cursor containing updated inventory data
+        inventoryCursorAdapter.swapCursor(data);
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        // Callback called when the data needs to be deleted
+        inventoryCursorAdapter.swapCursor(null);
     }
 }

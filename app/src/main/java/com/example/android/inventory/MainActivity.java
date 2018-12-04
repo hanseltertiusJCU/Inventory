@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
@@ -69,62 +70,20 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Perform a query on content URI
-        Cursor cursor = getContentResolver().query(InventoryEntry.CONTENT_URI, // the URI to query
+        Cursor cursor = getContentResolver().query(
+                InventoryEntry.CONTENT_URI, // the URI to query
                 projection, // The columns to return
                 null, // The columns for WHERE clause
                 null, // The values for WHERE clause
                 null // The sort order
         );
 
-        try{
-            // Display the number of rows in the Cursor (which reflects the number of rows in the
-            // pets table in the database).
-            TextView displayView = (TextView) findViewById(R.id.text_view_inventory);
-            displayView.setText("Number of rows in inventories database table: " + cursor.getCount() + " inventories.\n\n");
-
-            // Append the column title into the displayView, it's like forming the table
-            displayView.append(InventoryEntry._ID + " - " +
-                    InventoryEntry.COLUMN_INVENTORY_BRAND + " - " +
-                    InventoryEntry.COLUMN_INVENTORY_NAME + " - " +
-                    InventoryEntry.COLUMN_INVENTORY_PRICE + " - " +
-                    InventoryEntry.COLUMN_INVENTORY_QUANTITY + " - " +
-                    InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER + " - " +
-                    InventoryEntry.COLUMN_INVENTORY_EMAIL + "\n");
-
-            // Figure out the index of each column
-            int idColumnIndex = cursor.getColumnIndex(InventoryEntry._ID);
-            int brandColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_BRAND);
-            int nameColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_NAME);
-            int priceColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
-            int quantityColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_QUANTITY);
-            int phoneColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER);
-            int emailColumnIndex = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_EMAIL);
-
-            // Iterate through all the returned rows in the cursor
-            while (cursor.moveToNext()) {
-                // Use that index to extract the String or Int or double value of the word
-                // at the current row the cursor is on.
-                int currentID = cursor.getInt(idColumnIndex);
-                String currentBrand = cursor.getString(brandColumnIndex);
-                String currentName = cursor.getString(nameColumnIndex);
-                double currentPrice = cursor.getDouble(priceColumnIndex);
-                int currentQuantity = cursor.getInt(quantityColumnIndex);
-                String currentPhone = cursor.getString(phoneColumnIndex);
-                String currentEmail = cursor.getString(emailColumnIndex);
-                // Display the values from each column of the current row in the cursor in the TextView
-                displayView.append(("\n" + currentID + " - " +
-                        currentBrand + " - " +
-                        currentName + " - " +
-                        "$" + currentPrice + " - " +
-                        currentQuantity + " - " +
-                        currentPhone + " - " +
-                        currentEmail));
-            }
-        } finally {
-            // Always close the cursor when you're done reading from it. This releases all its
-            // resources and makes it invalid.
-            cursor.close();
-        }
+        // Find ListView to populate
+        ListView listViewItems = (ListView) findViewById(R.id.list_view_inventory);
+        // Setup cursor adapter using cursor from last step
+        InventoryCursorAdapter inventoryCursorAdapter = new InventoryCursorAdapter(this, cursor);
+        // Attach cursor adapter to the ListView
+        listViewItems.setAdapter(inventoryCursorAdapter);
     }
 
     /**

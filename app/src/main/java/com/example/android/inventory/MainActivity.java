@@ -84,6 +84,11 @@ public class MainActivity extends AppCompatActivity {
         InventoryCursorAdapter inventoryCursorAdapter = new InventoryCursorAdapter(this, cursor);
         // Attach cursor adapter to the ListView
         listViewItems.setAdapter(inventoryCursorAdapter);
+
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = findViewById(R.id.empty_view);
+        listViewItems.setEmptyView(emptyView);
+
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.example.android.inventory;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -10,12 +11,14 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -55,6 +58,19 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     /** Boolean for blank editor values (unchanged from default) */
     private boolean blankEditorValues = false;
 
+    /** Boolean for knowing that anything in EditorActivity (the inventory) has changed */
+    private boolean inventoryHasChanged = false;
+
+    // OnTouchListener that listens for any user touches on a View, implying that they are modifying
+    // the view, and we change the inventoryHasChanged boolean to true.
+    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            inventoryHasChanged = true;
+            return false;
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +102,14 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mQuantityEditText = (EditText) findViewById(R.id.edit_product_quantity);
         mPhoneNumberEditText = (EditText) findViewById(R.id.edit_product_phone_number);
         mEmailEditText = (EditText) findViewById(R.id.edit_product_email);
+
+        // Set onTouchListener into all edit texts
+        mBrandEditText.setOnTouchListener(mTouchListener);
+        mNameEditText.setOnTouchListener(mTouchListener);
+        mPriceEditText.setOnTouchListener(mTouchListener);
+        mQuantityEditText.setOnTouchListener(mTouchListener);
+        mPhoneNumberEditText.setOnTouchListener(mTouchListener);
+        mEmailEditText.setOnTouchListener(mTouchListener);
 
         // Setup string value to get the default text of EditText value
         String value = mQuantityEditText.getText().toString();
@@ -209,6 +233,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             newContentValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, phoneString);
             newContentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
 
+            // Check if brandString, nameString, phoneString and emailString is not empty
             if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
                     !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString)){
                 fulfilledTexts = true;
@@ -308,6 +333,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
             }
 
+            // Check if brandString, nameString, phoneString and emailString is not empty
             if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
                     !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString)){
                 fulfilledTexts = true;
@@ -339,6 +365,55 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     }
 
+    /**
+     * Method to show unsaved changes dialog whenever the user touch the EditText
+     * @param discardButtonClickListener click listener to handle the user confirming that
+     * changes should be discarded.
+     */
+    private void showUnsavedChangesDialog( DialogInterface.OnClickListener discardButtonClickListener) {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the positive and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.unsaved_changes_dialog_msg);
+        builder.setPositiveButton(R.string.discard, discardButtonClickListener);
+        builder.setNegativeButton(R.string.keep_editing, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Keep editing" button, so dismiss the dialog
+                // and continue editing the inventory.
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // If the inventory hasn't changed, continue with handling back button press
+        if (!inventoryHasChanged) {
+            super.onBackPressed();
+            return;
+        }
+
+        // Otherwise if there are unsaved changes, setup a dialog to warn the user.
+        // Create a click listener to handle the user confirming that changes should be discarded.
+        DialogInterface.OnClickListener discardButtonClickListener =
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // User clicked "Discard" button, close the current activity.
+                        finish();
+                    }
+                };
+
+        // Show dialog that there are unsaved changes
+        showUnsavedChangesDialog(discardButtonClickListener);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_editor.xml file.
@@ -365,8 +440,27 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 return true;
             // Respond to a click on the "Up" arrow button in the app bar
             case android.R.id.home:
-                // Navigate back to parent activity (CatalogActivity)
-                NavUtils.navigateUpFromSameTask(this);
+                // If the inventory hasn't changed, continue with navigating up to parent activity
+                // which is the {@link MainActivity}.
+                if (!inventoryHasChanged) {
+                    NavUtils.navigateUpFromSameTask(EditorActivity.this);
+                    return true;
+                }
+
+                // Otherwise if there are unsaved changes, setup a dialog to warn the user.
+                // Create a click listener to handle the user confirming that
+                // changes should be discarded.
+                DialogInterface.OnClickListener discardButtonClickListener =
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                // User clicked "Discard" button, navigate to parent activity.
+                                NavUtils.navigateUpFromSameTask(EditorActivity.this);
+                            }
+                        };
+
+                // Show a dialog that notifies the user they have unsaved changes
+                showUnsavedChangesDialog(discardButtonClickListener);
                 return true;
         }
         return super.onOptionsItemSelected(item);

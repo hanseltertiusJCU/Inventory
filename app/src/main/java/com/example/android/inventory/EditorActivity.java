@@ -87,6 +87,10 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         if (currentInventoryUri == null){
             // Set the title for the EditorActivity that shows create a new inventory
             this.setTitle("Add a new inventory");
+
+            // Invalidate the options menu, so the "Delete" menu option can be hidden.
+            // (It doesn't make sense to delete an inventory that hasn't been created yet.)
+            invalidateOptionsMenu();
         } else {
             // Set the title for the EditorActivity that shows edit an existing inventory
             this.setTitle("Edit inventory");
@@ -412,6 +416,22 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
         // Show dialog that there are unsaved changes
         showUnsavedChangesDialog(discardButtonClickListener);
+    }
+
+    /**
+     * Prepare the option menu before creating
+     * @param menu used to search for the item
+     * @return true, meaning that the options menu is being prepared
+     */
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        // If this is a new pet, hide the "Delete" menu item.
+        if (currentInventoryUri == null) {
+            MenuItem menuItem = menu.findItem(R.id.action_delete);
+            menuItem.setVisible(false);
+        }
+        return true;
     }
 
     @Override

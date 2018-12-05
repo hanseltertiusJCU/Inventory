@@ -1,5 +1,6 @@
 package com.example.android.inventory;
 
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,6 +17,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
@@ -45,6 +47,21 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         // Find ListView to populate
         ListView listViewItems = (ListView) findViewById(R.id.list_view_inventory);
+
+        listViewItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                // Set up an intent to open up EditorActivity
+                Intent intent = new Intent(MainActivity.this, EditorActivity.class);
+                // Create specific content URI for editing the specific inventory
+                Uri uri = ContentUris.withAppendedId(InventoryEntry.CONTENT_URI, id);
+
+                // Set the URI into the intent
+                intent.setData(uri);
+                // Start the EditorActivity
+                startActivity(intent);
+            }
+        });
 
         // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
         View emptyView = findViewById(R.id.empty_view);

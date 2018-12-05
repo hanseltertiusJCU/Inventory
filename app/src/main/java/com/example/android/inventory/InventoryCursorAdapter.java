@@ -53,7 +53,7 @@ public class InventoryCursorAdapter extends CursorAdapter {
         String name = cursor.getString(cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_NAME));
         double price = cursor.getDouble(cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE));
         // Convert the double into string as setText cannot directly set double value
-        String priceResult = Double.toString(price);
+        String priceResult = String.valueOf(price);
         int quantity = cursor.getInt(cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_QUANTITY));
         // Convert the integer into string as setText cannot accept integer value
         String quantityResult = String.valueOf(quantity);

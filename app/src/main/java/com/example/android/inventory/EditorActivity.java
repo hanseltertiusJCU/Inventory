@@ -1,8 +1,15 @@
 package com.example.android.inventory;
 
 import android.content.ContentValues;
+import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -16,7 +23,7 @@ import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
-public class EditorActivity extends AppCompatActivity {
+public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     /** EditText field to enter the inventory's brand */
     private EditText mBrandEditText;
@@ -39,12 +46,36 @@ public class EditorActivity extends AppCompatActivity {
     /** int value for setup default quantity */
     private int quantityInventory;
 
+    /** Identifier for the inventory data loader */
+    private static final int INVENTORY_LOADER = 0;
+
+    private Uri currentInventoryUri;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
+
+        // Get the intent from MainActivity
+        Intent intent = getIntent();
+
+        // Get the associated URI by getData method from the respective intent
+        currentInventoryUri = intent.getData();
+
+        // Check if the current URI is null for setting up the Activity title and optionally initiate
+        // the loader
+        if (currentInventoryUri == null){
+            // Set the title for the EditorActivity that shows create a new inventory
+            this.setTitle("Add a new inventory");
+        } else {
+            // Set the title for the EditorActivity that shows edit an existing inventory
+            this.setTitle("Edit inventory");
+            // Initialize the loader or load the existing loader
+            getSupportLoaderManager().initLoader(INVENTORY_LOADER, null, this);
+        }
+
 
         // Find all relevant views that we will need to read user input from
         mBrandEditText = (EditText) findViewById(R.id.edit_product_brand);
@@ -67,7 +98,7 @@ public class EditorActivity extends AppCompatActivity {
         quantityDownButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(quantityInventory > 0){
+                if (quantityInventory > 0){
                     quantityInventory -= 1;
                     mQuantityEditText.setText("" + quantityInventory);
                 } else {
@@ -84,6 +115,10 @@ public class EditorActivity extends AppCompatActivity {
                 mQuantityEditText.setText("" + quantityInventory);
             }
         });
+
+
+
+
     }
 
     /**
@@ -211,5 +246,77 @@ public class EditorActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, @Nullable Bundle bundle) {
+        // Define a projection that specifies which columns from the database
+        // you will actually use after this query.
+        String[] projection = {
+                InventoryEntry._ID,
+                InventoryEntry.COLUMN_INVENTORY_BRAND,
+                InventoryEntry.COLUMN_INVENTORY_NAME,
+                InventoryEntry.COLUMN_INVENTORY_PRICE,
+                InventoryEntry.COLUMN_INVENTORY_QUANTITY,
+                InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER,
+                InventoryEntry.COLUMN_INVENTORY_EMAIL
+        };
+
+        // This loader will execute the ContentProvider's query method on a background thread
+        return new CursorLoader(this,
+                InventoryEntry.CONTENT_URI, // The content URI for the current inventory
+                projection, // Columns to include in the resulting Cursor
+                null, // No selection
+                null, // No selection arguments
+                null // Default sort order
+        );
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        // Check if there is no cursor available, if so then return nothing
+        if (cursor == null || cursor.getCount() < 1) {
+            return;
+        }
+
+        // Proceed with moving to the first row of the cursor and reading data from it
+        // (This should be the only row in the cursor)
+        if (cursor.moveToFirst()){
+            // Find the columns of inventory attributes that we're interested in
+            int brandString = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_BRAND);
+            int nameString = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_NAME);
+            int priceString = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PRICE);
+            int quantityString = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_QUANTITY);
+            int phoneNumberString = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER);
+            int emailString = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_EMAIL);
+
+            // Extract out the value from the Cursor for the given column index
+            String brand = cursor.getString(brandString);
+            String name = cursor.getString(nameString);
+            double price = cursor.getDouble(priceString);
+            int quantity = cursor.getInt(quantityString);
+            String phoneNumber = cursor.getString(phoneNumberString);
+            String email = cursor.getString(emailString);
+
+            // Update the views on the screen with the values from the database
+            mBrandEditText.setText(brand);
+            mNameEditText.setText(name);
+            mPriceEditText.setText(String.valueOf(price));
+            mQuantityEditText.setText(String.valueOf(quantity));
+            mPhoneNumberEditText.setText(phoneNumber);
+            mEmailEditText.setText(email);
+        }
+
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        mBrandEditText.setText("");
+        mNameEditText.setText("");
+        mPriceEditText.setText("");
+        mQuantityEditText.setText(String.valueOf(1));
+        mPhoneNumberEditText.setText("");
+        mEmailEditText.setText("");
     }
 }

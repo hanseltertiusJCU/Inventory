@@ -291,10 +291,21 @@ public class InventoryProvider extends ContentProvider {
         // Get writable database
         SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
 
+        // Track the number of rows that were deleted
+        int rowsDeleted;
+
         final int match = uriMatcher.match(uri);
         switch (match){
             case INVENTORIES:
-                return db.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = db.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+
+                // If 1 or more rows were deleted, then notify all listeners that the data at the
+                // given URI has changed
+                if (rowsDeleted != 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return rowsDeleted;
             case INVENTORY_ID:
                 // For the INVENTORY_ID code, extract out the ID from the URI.
                 // For an example URI such as "content://com.example.android.inventory/inventories/3",
@@ -302,7 +313,15 @@ public class InventoryProvider extends ContentProvider {
                 // String array containing the actual ID of 3 in this case.
                 selection = InventoryEntry._ID + "=?";
                 selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
-                return db.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+                rowsDeleted = db.delete(InventoryEntry.TABLE_NAME, selection, selectionArgs);
+
+                // If 1 or more rows were deleted, then notify all listeners that the data at the
+                // given URI has changed
+                if (rowsDeleted != 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                }
+
+                return rowsDeleted;
             default:
                 throw new IllegalArgumentException("Deletion is not supported for " + uri);
         }

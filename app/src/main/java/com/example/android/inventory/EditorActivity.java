@@ -1,12 +1,15 @@
 package com.example.android.inventory;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.CursorLoader;
@@ -82,23 +85,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // Get the associated URI by getData method from the respective intent
         currentInventoryUri = intent.getData();
 
-        // Check if the current URI is null for setting up the Activity title and optionally initiate
-        // the loader
-        if (currentInventoryUri == null){
-            // Set the title for the EditorActivity that shows create a new inventory
-            this.setTitle("Add a new inventory");
-
-            // Invalidate the options menu, so the "Delete" menu option can be hidden.
-            // (It doesn't make sense to delete an inventory that hasn't been created yet.)
-            invalidateOptionsMenu();
-        } else {
-            // Set the title for the EditorActivity that shows edit an existing inventory
-            this.setTitle("Edit inventory");
-            // Initialize the loader or load the existing loader
-            getSupportLoaderManager().initLoader(0, null, this);
-        }
-
-
         // Find all relevant views that we will need to read user input from
         mBrandEditText = (EditText) findViewById(R.id.edit_product_brand);
         mNameEditText = (EditText) findViewById(R.id.edit_product_name);
@@ -121,13 +107,14 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         // Set the value for int variable based on default text
         quantityInventory = Integer.parseInt(value);
 
-        // Reference to button
+        // Reference to down button
         Button quantityDownButton = (Button) findViewById(R.id.decrease_quantity_button);
-        Button quantityUpButton = (Button) findViewById(R.id.increase_quantity_button);
 
+        // Set click listener for quantity down button
         quantityDownButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Check if quantity is more than 0
                 if (quantityInventory > 0){
                     quantityInventory -= 1;
                     mQuantityEditText.setText("" + quantityInventory);
@@ -138,6 +125,10 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
+        // Reference to up button
+        Button quantityUpButton = (Button) findViewById(R.id.increase_quantity_button);
+
+        // Set click listener for quantity up button
         quantityUpButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -146,8 +137,61 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
+        Button callButton = (Button) findViewById(R.id.order_by_phone_number_button);
 
+        callButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent callIntent = new Intent(Intent.ACTION_DIAL);
+                callIntent.setData(Uri.parse("tel:" + mPhoneNumberEditText.getText().toString().trim()));
+                if (callIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(callIntent);
+                }
 
+                startActivity(callIntent);
+            }
+        });
+
+        Button emailButton = (Button) findViewById(R.id.order_by_email_button);
+
+        emailButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_SENDTO);
+                intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+                intent.putExtra(Intent.EXTRA_EMAIL, new String[] { mEmailEditText.getText().toString().trim() });
+                intent.putExtra(Intent.EXTRA_SUBJECT, "Order inventory item: " + mBrandEditText.getText().toString().trim() +
+                        " " + mNameEditText.getText().toString().trim());
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
+            }
+        });
+
+        // Check if the current URI is null for setting up the Activity title and optionally initiate
+        // the loader
+        if (currentInventoryUri == null){
+            // Set the title for the EditorActivity that shows create a new inventory
+            this.setTitle("Add a new inventory");
+
+            // Set visibility for button call and e-mail to gone
+            callButton.setVisibility(View.GONE);
+            emailButton.setVisibility(View.GONE);
+
+            // Invalidate the options menu, so the "Delete" menu option can be hidden.
+            // (It doesn't make sense to delete an inventory that hasn't been created yet.)
+            invalidateOptionsMenu();
+        } else {
+            // Set the title for the EditorActivity that shows edit an existing inventory
+            this.setTitle("Edit inventory");
+
+            // Set visibility for button call and e-mail to visible
+            callButton.setVisibility(View.VISIBLE);
+            emailButton.setVisibility(View.VISIBLE);
+
+            // Initialize the loader or load the existing loader
+            getSupportLoaderManager().initLoader(0, null, this);
+        }
 
     }
 

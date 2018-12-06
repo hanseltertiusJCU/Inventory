@@ -159,17 +159,10 @@
             android:text="Product Name"/>
 
         <!-- Input field -->
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2">
-
-            <!-- Phone Number field -->
-            <EditText
-                android:id="@+id/edit_product_phone_number"
-                android:hint="(+62)87899413821"
-                android:inputType="phone"
-                style="@style/EditorFieldStyle" />
 
             <!-- Order by Phone Number button -->
             <Button
@@ -183,7 +176,16 @@
                 android:background="@drawable/ic_phone"
                 android:layout_alignParentRight="true"/>
 
-        </RelativeLayout>
+            <!-- Phone Number field -->
+            <EditText
+                android:id="@+id/edit_product_phone_number"
+                android:hint="(+62)87899413821"
+                android:inputType="phone"
+                style="@style/EditorFieldStyle" />
+
+
+
+        </LinearLayout>
 
     </LinearLayout>
 
@@ -199,17 +201,10 @@
             android:text="E-mail"/>
 
         <!-- Input field -->
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2">
-
-            <!-- Product E-mail field -->
-            <EditText
-                android:id="@+id/edit_product_email"
-                android:hint="goodgame@gmail.com"
-                android:inputType="textEmailAddress"
-                style="@style/EditorFieldStyle" />
 
             <!-- Order by E-mail button -->
             <Button
@@ -223,7 +218,15 @@
                 android:layout_alignParentRight="true"
                 android:background="@drawable/ic_email"/>
 
-        </RelativeLayout>
+
+            <!-- Product E-mail field -->
+            <EditText
+                android:id="@+id/edit_product_email"
+                android:hint="goodgame@gmail.com"
+                android:inputType="textEmailAddress"
+                style="@style/EditorFieldStyle" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

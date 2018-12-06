@@ -21,6 +21,9 @@
     <!-- Dialog message to ask the user to confirm deleting the current inventory [CHAR LIMIT=NONE] -->
     <string name="delete_dialog_msg">Delete this inventory?</string>
 
+    <!-- Dialog message to ask the user to confirm deleting the whole inventories [CHAR LIMIT=NONE] -->
+    <string name="delete_all_dialog_message">Delete all inventories?</string>
+
     <!-- Dialog button text for the option to confirm deleting the current inventory [CHAR LIMIT=20] -->
     <string name="delete">Delete</string>
 

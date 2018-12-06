@@ -2,9 +2,9 @@ package com.example.android.inventory;
 
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,6 +12,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
@@ -30,6 +32,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private InventoryCursorAdapter inventoryCursorAdapter;
 
     private Uri newUri;
+
+    /** Int variable for showing how many rows does the whole database deleted */
+    private int rowsDeleted;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,6 +105,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     }
 
+//    public void clickSaleItem(long id, int quantity){
+//        inventoryProvider.sellInventoryItem(id, quantity);
+//        getSupportLoaderManager().restartLoader(INVENTORY_LOADER, null, this);
+//    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu options from the res/menu/menu_main.xml file.
@@ -115,12 +125,48 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             // Respond when clicked "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
                 insertInventory();
+                Toast.makeText(this, "Dummy data insertion successful.",
+                        Toast.LENGTH_SHORT).show();
                 return true;
             // Respond when clicked "Delete all inventories" menu option
             case R.id.action_delete_all_entries:
+                showDeleteConfirmationDialog();
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showDeleteConfirmationDialog() {
+        // Create an AlertDialog.Builder and set the message, and click listeners
+        // for the positive and negative buttons on the dialog.
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_all_dialog_message);
+        builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Delete" button, so delete all inventories.
+                deleteAllInventories();
+            }
+        });
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Cancel" button, so dismiss the dialog
+                // and continue editing the inventory.
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    /**
+     * Helper method to delete all pets in the database.
+     */
+    private void deleteAllInventories() {
+        rowsDeleted = getContentResolver().delete(InventoryEntry.CONTENT_URI, null, null);
     }
 
     @NonNull

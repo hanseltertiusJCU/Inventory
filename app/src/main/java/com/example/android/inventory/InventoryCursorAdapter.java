@@ -78,13 +78,19 @@ public class InventoryCursorAdapter extends CursorAdapter {
                 // Append the URI with id (represents the id for the database as well as
                 // the position of the list view item)
                 Uri uri = ContentUris.withAppendedId(InventoryEntry.CONTENT_URI, id);
+                // Call the method that brings context of the Activity, appended id URI as well as
+                // quantity of the respective inventory
                 sellInventoryItem(context, uri, quantity);
             }
         });
     }
 
     /**
-     * Method for selling an item in inventory
+     * Method for selling an item in inventory.
+     *
+     * @param context context of the targeted activity
+     * @param uri URI with appended ID (to select the item)
+     * @param quantity quantity of the inventory (useful for calculations)
      */
     public void sellInventoryItem(Context context, Uri uri, int quantity){
 

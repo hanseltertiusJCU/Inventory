@@ -163,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     /**
-     * Helper method to delete all pets in the database.
+     * Helper method to delete all inventories in the database.
      */
     private void deleteAllInventories() {
         rowsDeleted = getContentResolver().delete(InventoryEntry.CONTENT_URI, null, null);

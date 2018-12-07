@@ -230,4 +230,45 @@
 
     </LinearLayout>
 
+    <!-- E-mail category -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Label -->
+        <TextView
+            style="@style/CategoryStyle"
+            android:text="Picture"/>
+
+        <!-- Input field -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_weight="2">
+
+            <!-- Image button -->
+            <ImageView
+                android:id="@+id/image_button"
+                android:layout_width="138dp"
+                android:layout_height="138dp"
+                android:layout_gravity="center"
+                android:layout_margin="4dp"
+                android:scaleType="centerCrop"
+                android:background="@drawable/add_picture_icon"/>
+
+
+            <!-- Instruction for image button -->
+            <TextView
+                android:textStyle="italic"
+                android:text="Press the picture to change (if existed)"
+                android:textAlignment="center"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
+                style="@style/EditorFieldStyle" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 </LinearLayout>

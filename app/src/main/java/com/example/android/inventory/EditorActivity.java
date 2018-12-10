@@ -1,16 +1,14 @@
 package com.example.android.inventory;
 
-import android.Manifest;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.content.CursorLoader;
@@ -19,7 +17,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -30,6 +27,8 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
+
+import java.io.ByteArrayOutputStream;
 
 public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -51,6 +50,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     /** EditText field to enter the inventory's E-mail */
     private EditText mEmailEditText;
 
+    /** ImageView field to store image into the database */
+    private ImageView imageButton;
+
+    /** Global variable for checking the validity of image bitmap */
+    private Bitmap mBitmap;
+    private boolean mHasImage;
+
+    private static final int REQUEST_IMAGE_CAPTURE = 1;
+
     /** int value for setup default quantity */
     private int quantityInventory;
 
@@ -58,7 +66,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     private Uri currentInventoryUri;
 
     /** Boolean for ensure that everything is being fulfilled */
-    private boolean fulfilledTexts = false;
+    private boolean fulfilledData = false;
 
     /** Boolean for blank editor values (unchanged from default) */
     private boolean blankEditorValues = false;
@@ -75,9 +83,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             return false;
         }
     };
-
-    private ImageView image;
-    static final int REQUEST_IMAGE_CAPTURE = 1;
 
 
     @Override
@@ -98,6 +103,9 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mQuantityEditText = (EditText) findViewById(R.id.edit_product_quantity);
         mPhoneNumberEditText = (EditText) findViewById(R.id.edit_product_phone_number);
         mEmailEditText = (EditText) findViewById(R.id.edit_product_email);
+        imageButton = (ImageView) findViewById(R.id.image_button);
+        mHasImage = false;
+        mBitmap = null;
 
         // Set onTouchListener into all edit texts
         mBrandEditText.setOnTouchListener(mTouchListener);
@@ -106,6 +114,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mQuantityEditText.setOnTouchListener(mTouchListener);
         mPhoneNumberEditText.setOnTouchListener(mTouchListener);
         mEmailEditText.setOnTouchListener(mTouchListener);
+        imageButton.setOnTouchListener(mTouchListener);
 
         // Setup string value to get the default text of EditText value
         String value = mQuantityEditText.getText().toString();
@@ -177,15 +186,17 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
-        // Reference to the ImageView for inputting the picture
-        image = (ImageView) findViewById(R.id.image_button);
+
 
         // Make the button to take a picture from camera by accessing the camera app
-        image.setOnClickListener(new View.OnClickListener() {
+        imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Create intent for camera
                 Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+                if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
+                }
             }
         });
 
@@ -302,13 +313,24 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             newContentValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, phoneString);
             newContentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
 
+            if (mHasImage) {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                byte[] imageByte = byteArrayOutputStream.toByteArray();
+                newContentValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, imageByte);
+            } else {
+                Toast.makeText(this, "Photo must be required",
+                        Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             // Check if brandString, nameString, phoneString and emailString is not empty
             if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
                     !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString)){
-                fulfilledTexts = true;
+                fulfilledData = true;
             }
 
-            if (fulfilledTexts){
+            if (fulfilledData){
                 Uri newUri = getContentResolver().insert(
                         InventoryEntry.CONTENT_URI,     // Content URI from InventoryEntry
                         newContentValues                // The values to insert
@@ -402,13 +424,24 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
             }
 
-            // Check if brandString, nameString, phoneString and emailString is not empty
-            if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
-                    !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString)){
-                fulfilledTexts = true;
+            // Check if image exist
+            if (mHasImage) {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                byte[] imageByte = byteArrayOutputStream.toByteArray();
+                existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, imageByte);
+            } else {
+                Toast.makeText(this, "Photo must be required",
+                        Toast.LENGTH_SHORT).show();
             }
 
-            if(fulfilledTexts){
+            // Check if brandString, nameString, phoneString, emailString and image is not empty
+            if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
+                    !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString) && mHasImage){
+                fulfilledData = true;
+            }
+
+            if(fulfilledData){
                 // Otherwise this is an EXISTING inventory, so update the inventory
                 // with content URI: currentInventoryUri and pass in the new ContentValues.
                 // Pass in null for the selection and selection args
@@ -443,8 +476,9 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            image.setImageBitmap(imageBitmap);
+            mBitmap = (Bitmap) extras.get("data");
+            mHasImage = true;
+            imageButton.setImageBitmap(mBitmap);
         }
     }
 
@@ -528,7 +562,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
                 saveInventory();
-                if(fulfilledTexts || blankEditorValues) {
+                if(fulfilledData || blankEditorValues) {
                     // Return to MainActivity
                     finish();
                 }
@@ -596,17 +630,20 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      * Perform the deletion of the inventory in the database.
      */
     private void deleteInventory() {
-        int mDeletedRow = getContentResolver().delete(
-                currentInventoryUri,           // URI with current inventory id
-                null,
-                null
-        );
+        getLoaderManager().destroyLoader(0);
+        if (currentInventoryUri != null) {
+            int mDeletedRow = getContentResolver().delete(
+                    currentInventoryUri,           // URI with current inventory id
+                    null,
+                    null
+            );
 
-        // Check whether the data is successfully updated
-        if(mDeletedRow != 0){
-            Toast.makeText(this, getString(R.string.editor_delete_inventory_successful), Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, getString(R.string.editor_delete_inventory_successful), Toast.LENGTH_SHORT).show();
+            // Check whether the data is successfully updated
+            if (mDeletedRow != 0) {
+                Toast.makeText(this, getString(R.string.editor_delete_inventory_successful), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.editor_delete_inventory_successful), Toast.LENGTH_SHORT).show();
+            }
         }
 
         // Exit activity
@@ -625,7 +662,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 InventoryEntry.COLUMN_INVENTORY_PRICE,
                 InventoryEntry.COLUMN_INVENTORY_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER,
-                InventoryEntry.COLUMN_INVENTORY_EMAIL
+                InventoryEntry.COLUMN_INVENTORY_EMAIL,
+                InventoryEntry.COLUMN_INVENTORY_IMAGE
         };
 
         // This loader will execute the ContentProvider's query method on a background thread
@@ -655,6 +693,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int quantityStringColumn = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_QUANTITY);
             int phoneNumberStringColumn = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER);
             int emailStringColumn = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_EMAIL);
+            int imageStringColumn = cursor.getColumnIndex(InventoryEntry.COLUMN_INVENTORY_IMAGE);
 
             // Extract out the value from the Cursor for the given column index
             String brand = cursor.getString(brandStringColumn);
@@ -663,6 +702,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int quantity = cursor.getInt(quantityStringColumn);
             String phoneNumber = cursor.getString(phoneNumberStringColumn);
             String email = cursor.getString(emailStringColumn);
+            byte[] image = cursor.getBlob(imageStringColumn);
+            if (image != null) {
+                // Set the image existed status to true
+                mHasImage = true;
+                // Decode the byte array into bitmap
+                mBitmap = BitmapFactory.decodeByteArray(image, 0, image.length);
+            }
 
             // Update the views on the screen with the values from the database
             mBrandEditText.setText(brand);
@@ -671,6 +717,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             mQuantityEditText.setText(String.valueOf(quantity));
             mPhoneNumberEditText.setText(phoneNumber);
             mEmailEditText.setText(email);
+            imageButton.setImageBitmap(mBitmap);
         }
 
     }
@@ -680,7 +727,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mBrandEditText.setText("");
         mNameEditText.setText("");
         mPriceEditText.setText("");
-        mQuantityEditText.setText(String.valueOf(1));
+        mQuantityEditText.setText(String.valueOf(1)); // Set default quantity value in EditText
         mPhoneNumberEditText.setText("");
         mEmailEditText.setText("");
     }

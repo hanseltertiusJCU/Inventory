@@ -163,6 +163,12 @@ public class InventoryProvider extends ContentProvider {
             throw new IllegalArgumentException("Inventory requires the supplier email.");
         }
 
+        // Check that the image is not null
+        byte[] image = values.getAsByteArray(InventoryEntry.COLUMN_INVENTORY_IMAGE);
+        if (image == null){
+            throw new IllegalArgumentException("Inventory requires the product image.");
+        }
+
         // By calling the insert method, we return the id in order to return the URI with the id
         // and to get the new inventory
         long id = db.insert(InventoryEntry.TABLE_NAME, null, values);
@@ -257,6 +263,14 @@ public class InventoryProvider extends ContentProvider {
             String email = values.getAsString(InventoryEntry.COLUMN_INVENTORY_EMAIL);
             if (email == null){
                 throw new IllegalArgumentException("Inventory requires the supplier email.");
+            }
+        }
+
+        if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_IMAGE)){
+            // Check that the image is not null
+            byte[] image = values.getAsByteArray(InventoryEntry.COLUMN_INVENTORY_IMAGE);
+            if (image == null){
+                throw new IllegalArgumentException("Inventory requires the product image.");
             }
         }
 

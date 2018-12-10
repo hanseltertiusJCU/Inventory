@@ -24,21 +24,23 @@ public class InventoryContract {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_INVENTORIES);
 
         /** Name of database table for inventories */
-        public final static String TABLE_NAME = "inventories";
+        public static final String TABLE_NAME = "inventories";
 
-        public final static String _ID = BaseColumns._ID;
+        public static final String _ID = BaseColumns._ID;
 
-        public final static String COLUMN_INVENTORY_BRAND = "brand";
+        public static final String COLUMN_INVENTORY_BRAND = "brand";
 
-        public final static String COLUMN_INVENTORY_NAME = "name";
+        public static final String COLUMN_INVENTORY_NAME = "name";
 
-        public final static String COLUMN_INVENTORY_PRICE = "price";
+        public static final String COLUMN_INVENTORY_PRICE = "price";
 
-        public final static String COLUMN_INVENTORY_QUANTITY = "quantity";
+        public static final String COLUMN_INVENTORY_QUANTITY = "quantity";
 
-        public final static String COLUMN_INVENTORY_PHONE_NUMBER = "phone_number";
+        public static final String COLUMN_INVENTORY_PHONE_NUMBER = "phone_number";
 
-        public final static String COLUMN_INVENTORY_EMAIL = "email";
+        public static final String COLUMN_INVENTORY_EMAIL = "email";
+
+        public static final String COLUMN_INVENTORY_IMAGE = "image";
 
         /** The MIME type of the {@link #CONTENT_URI} for a list of inventories.*/
         public static final String CONTENT_LIST_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" +

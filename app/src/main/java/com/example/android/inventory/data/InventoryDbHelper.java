@@ -39,7 +39,8 @@ public class InventoryDbHelper extends SQLiteOpenHelper {
                 InventoryEntry.COLUMN_INVENTORY_PRICE + " REAL NOT NULL DEFAULT 0.00, " +
                 InventoryEntry.COLUMN_INVENTORY_QUANTITY + " INTEGER NOT NULL DEFAULT 0, " +
                 InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER + " TEXT NOT NULL, " +
-                InventoryEntry.COLUMN_INVENTORY_EMAIL + " TEXT NOT NULL " +
+                InventoryEntry.COLUMN_INVENTORY_EMAIL + " TEXT NOT NULL, " +
+                InventoryEntry.COLUMN_INVENTORY_IMAGE + " BLOB NOT NULL" +
                 " );";
 
         sqLiteDatabase.execSQL(SQL_CREATE_INVENTORIES_TABLE);
@@ -50,6 +51,8 @@ public class InventoryDbHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int updatedVersion) {
-
+        // on upgrade drop older tables
+        sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + InventoryEntry.TABLE_NAME);
+        onCreate(sqLiteDatabase);
     }
 }

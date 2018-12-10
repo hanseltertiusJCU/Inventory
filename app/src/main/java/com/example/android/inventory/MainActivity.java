@@ -1,11 +1,16 @@
 package com.example.android.inventory;
 
+import android.annotation.TargetApi;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -24,14 +29,14 @@ import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
+import java.io.ByteArrayOutputStream;
+
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     /** Identifier for the inventory data loader */
     private static final int INVENTORY_LOADER = 0;
 
     private InventoryCursorAdapter inventoryCursorAdapter;
-
-    private Uri newUri;
 
     /** Int variable for showing how many rows does the whole database deleted */
     private int rowsDeleted;
@@ -88,6 +93,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
      * Helper method to insert hardcoded dummy inventory data into the database.
      */
     private void insertInventory(){
+        // Set the byte[] variable
+        byte[] dummyImage = convertToByte(getDrawable(R.drawable.samsung_tv_32));
+
         // Create a ContentValues object where column names are the keys,
         // and Samsung TV's attributes are the values.
         ContentValues dummyValues = new ContentValues();
@@ -97,18 +105,26 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         dummyValues.put(InventoryEntry.COLUMN_INVENTORY_QUANTITY, 2);
         dummyValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, "(888) 3386902");
         dummyValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, "samsungbusiness@gmail.com");
+        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, dummyImage);
+
 
         // Insert a new row for Samsung TV's in the database, returning the ID of that new row.
         // *) The first argument for db.insert() is the content URI from InventoryEntry.
         // *) The second argument is the ContentValues object containing the info for Samsung TV.
-        newUri = getContentResolver().insert(InventoryEntry.CONTENT_URI, dummyValues);
+        getContentResolver().insert(InventoryEntry.CONTENT_URI, dummyValues);
 
     }
 
-//    public void clickSaleItem(long id, int quantity){
-//        inventoryProvider.sellInventoryItem(id, quantity);
-//        getSupportLoaderManager().restartLoader(INVENTORY_LOADER, null, this);
-//    }
+    private byte[] convertToByte(Drawable drawable) {
+        // Convert to bitmap
+        BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+        Bitmap bitmap = bitmapDrawable.getBitmap();
+
+        // Convert to byte to store
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        return byteArrayOutputStream.toByteArray();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -182,11 +198,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 InventoryEntry.COLUMN_INVENTORY_PRICE,
                 InventoryEntry.COLUMN_INVENTORY_QUANTITY,
                 InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER,
-                InventoryEntry.COLUMN_INVENTORY_EMAIL
+                InventoryEntry.COLUMN_INVENTORY_EMAIL,
+                InventoryEntry.COLUMN_INVENTORY_IMAGE
         };
 
         // This loader will execute the ContentProvider's query method on a background thread
-        return new CursorLoader(this,
+        return new CursorLoader(
+                this,
                 InventoryEntry.CONTENT_URI,
                 projection,
                 null,

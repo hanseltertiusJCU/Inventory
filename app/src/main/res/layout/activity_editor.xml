@@ -156,7 +156,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Product Name"/>
+            android:text="Phone number"/>
 
         <!-- Input field -->
         <LinearLayout

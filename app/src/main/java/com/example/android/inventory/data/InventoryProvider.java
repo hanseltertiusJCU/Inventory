@@ -8,7 +8,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.android.inventory.data.InventoryContract.InventoryEntry;
 
@@ -124,9 +123,6 @@ public class InventoryProvider extends ContentProvider {
 
     private Uri insertInventory(Uri uri, ContentValues values){
 
-        // Create and/or open a database to write from it
-        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
-
         // Check that the brand is not null
         String brand = values.getAsString(InventoryEntry.COLUMN_INVENTORY_BRAND);
         if (brand == null){
@@ -168,6 +164,9 @@ public class InventoryProvider extends ContentProvider {
         if (image == null){
             throw new IllegalArgumentException("Inventory requires the product image.");
         }
+
+        // Create and/or open a database to write from it
+        SQLiteDatabase db = inventoryDbHelper.getWritableDatabase();
 
         // By calling the insert method, we return the id in order to return the URI with the id
         // and to get the new inventory
@@ -216,6 +215,11 @@ public class InventoryProvider extends ContentProvider {
      * Return the number of rows that were successfully updated.
      */
     private int updateInventory(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+
+        // If there is no ContentValues to update, then return no updated rows (updatedRows = 0)
+        if (values.size() == 0){
+            return 0;
+        }
 
         // Check if the updated value involves the respective key(s)
         if (values.containsKey(InventoryEntry.COLUMN_INVENTORY_BRAND)){
@@ -279,11 +283,6 @@ public class InventoryProvider extends ContentProvider {
 
         // Call the SQLiteDatabase update method to return how many row(s) is/are updated
         int updatedRows = db.update(InventoryEntry.TABLE_NAME, values, selection, selectionArgs);
-
-        // If there is no ContentValues to update, then return no updated rows (updatedRows = 0)
-        if (values.size() == 0){
-            return 0;
-        }
 
         // If 1 or more rows were updated, then notify all listeners that the data at the
         // given URI has changed

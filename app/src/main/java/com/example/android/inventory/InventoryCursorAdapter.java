@@ -76,6 +76,7 @@ public class InventoryCursorAdapter extends CursorAdapter {
         final int quantity = cursor.getInt(quantityColumnIndex);
         // Convert the integer into string as setText cannot accept integer value
         String quantityResult = String.valueOf(quantity);
+        // Read inventory image from the cursor for current inventory
         byte[] inventoryImage = cursor.getBlob(imageColumnIndex);
 
 

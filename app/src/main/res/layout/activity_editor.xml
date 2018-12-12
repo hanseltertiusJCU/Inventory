@@ -16,7 +16,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Product Brand"/>
+            android:text="Product Brand*"/>
 
         <!-- Input field -->
         <LinearLayout
@@ -44,7 +44,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Product Name"/>
+            android:text="Product Name*"/>
 
         <!-- Input field -->
         <LinearLayout
@@ -72,7 +72,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Price/Quantity"/>
+            android:text="Price/Quantity*"/>
 
         <!-- Input field -->
         <LinearLayout
@@ -106,7 +106,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Quantity"/>
+            android:text="Quantity*"/>
 
         <!-- Input field -->
         <LinearLayout
@@ -156,7 +156,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Phone number"/>
+            android:text="Phone number*"/>
 
         <!-- Input field -->
         <LinearLayout
@@ -198,7 +198,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="E-mail"/>
+            android:text="E-mail*"/>
 
         <!-- Input field -->
         <LinearLayout
@@ -239,7 +239,7 @@
         <!-- Label -->
         <TextView
             style="@style/CategoryStyle"
-            android:text="Picture"/>
+            android:text="Picture*"/>
 
         <!-- Input field -->
         <LinearLayout
@@ -251,8 +251,8 @@
             <!-- Image button -->
             <ImageView
                 android:id="@+id/image_button"
-                android:layout_width="138dp"
-                android:layout_height="138dp"
+                android:layout_width="128dp"
+                android:layout_height="128dp"
                 android:layout_gravity="center"
                 android:layout_margin="4dp"
                 android:scaleType="centerCrop"

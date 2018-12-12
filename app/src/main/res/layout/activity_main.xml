@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#FFF176"
     tools:context=".MainActivity">
 
     <ListView
@@ -34,7 +35,8 @@
             android:fontFamily="sans-serif-medium"
             android:paddingTop="16dp"
             android:text="There is no data"
-            android:textAppearance="?android:textAppearanceMedium"/>
+            android:textAppearance="?android:textAppearanceMedium"
+            android:textColor="#B71C1C"/>
 
         <TextView
             android:id="@+id/empty_subtitle_text"
@@ -46,7 +48,7 @@
             android:paddingTop="8dp"
             android:text="Why don\'t you start adding the item?"
             android:textAppearance="?android:textAppearanceSmall"
-            android:textColor="#A2AAB0"/>
+            android:textColor="#616161"/>
     </RelativeLayout>
 
     <android.support.design.widget.FloatingActionButton

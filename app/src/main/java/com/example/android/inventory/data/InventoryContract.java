@@ -25,21 +25,14 @@ public class InventoryContract {
 
         /** Name of database table for inventories */
         public static final String TABLE_NAME = "inventories";
-
+        /** Name of columns for DB table */
         public static final String _ID = BaseColumns._ID;
-
         public static final String COLUMN_INVENTORY_BRAND = "brand";
-
         public static final String COLUMN_INVENTORY_NAME = "name";
-
         public static final String COLUMN_INVENTORY_PRICE = "price";
-
         public static final String COLUMN_INVENTORY_QUANTITY = "quantity";
-
         public static final String COLUMN_INVENTORY_PHONE_NUMBER = "phone_number";
-
         public static final String COLUMN_INVENTORY_EMAIL = "email";
-
         public static final String COLUMN_INVENTORY_IMAGE = "image";
 
         /** The MIME type of the {@link #CONTENT_URI} for a list of inventories.*/
@@ -47,7 +40,7 @@ public class InventoryContract {
                 CONTENT_AUTHORITY + "/" + PATH_INVENTORIES;
 
         /** The MIME type of the {@link #CONTENT_URI} for a single inventory.*/
-        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" +
+        public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" +
                 CONTENT_AUTHORITY + "/" + PATH_INVENTORIES;
 
     }

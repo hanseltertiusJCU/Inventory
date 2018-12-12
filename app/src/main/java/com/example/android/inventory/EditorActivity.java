@@ -315,7 +315,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
             if (mHasImage) {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStream);
                 byte[] imageByte = byteArrayOutputStream.toByteArray();
                 newContentValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, imageByte);
             } else {
@@ -427,7 +427,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Check if image exist
             if (mHasImage) {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStream);
                 byte[] imageByte = byteArrayOutputStream.toByteArray();
                 existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, imageByte);
             } else {
@@ -667,7 +667,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         };
 
         // This loader will execute the ContentProvider's query method on a background thread
-        return new CursorLoader(this,
+        return new CursorLoader(
+                this,
                 currentInventoryUri, // The content URI for the current inventory
                 projection, // Columns to include in the resulting Cursor
                 null, // No selection

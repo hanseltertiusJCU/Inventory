@@ -1,6 +1,5 @@
 package com.example.android.inventory;
 
-import android.annotation.TargetApi;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -10,7 +9,6 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -58,6 +56,17 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // Find ListView to populate
         ListView listViewItems = (ListView) findViewById(R.id.list_view_inventory);
 
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = findViewById(R.id.empty_view);
+        listViewItems.setEmptyView(emptyView);
+
+        // Setup cursor adapter using cursor from last step
+        // There is no inventory data yet (until the loader finishes)
+        // so pass in null for the Cursor.
+        inventoryCursorAdapter = new InventoryCursorAdapter(this, null);
+        // Attach cursor adapter to the ListView
+        listViewItems.setAdapter(inventoryCursorAdapter);
+
         listViewItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
@@ -73,57 +82,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             }
         });
 
-        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
-        View emptyView = findViewById(R.id.empty_view);
-        listViewItems.setEmptyView(emptyView);
-
-        // Setup cursor adapter using cursor from last step
-        // There is no inventory data yet (until the loader finishes)
-        // so pass in null for the Cursor.
-        inventoryCursorAdapter = new InventoryCursorAdapter(this, null);
-        // Attach cursor adapter to the ListView
-        listViewItems.setAdapter(inventoryCursorAdapter);
-
         // Initialize the loader
         getSupportLoaderManager().initLoader(INVENTORY_LOADER, null, this);
 
-    }
-
-    /**
-     * Helper method to insert hardcoded dummy inventory data into the database.
-     */
-    private void insertInventory(){
-        // Set the byte[] variable
-        byte[] dummyImage = convertToByte(getDrawable(R.drawable.samsung_tv_32));
-
-        // Create a ContentValues object where column names are the keys,
-        // and Samsung TV's attributes are the values.
-        ContentValues dummyValues = new ContentValues();
-        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_BRAND, "Samsung");
-        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, "32” Class N5300");
-        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, 199.99);
-        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_QUANTITY, 2);
-        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, "(888) 3386902");
-        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, "samsungbusiness@gmail.com");
-        dummyValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, dummyImage);
-
-
-        // Insert a new row for Samsung TV's in the database, returning the ID of that new row.
-        // *) The first argument for db.insert() is the content URI from InventoryEntry.
-        // *) The second argument is the ContentValues object containing the info for Samsung TV.
-        getContentResolver().insert(InventoryEntry.CONTENT_URI, dummyValues);
-
-    }
-
-    private byte[] convertToByte(Drawable drawable) {
-        // Convert to bitmap
-        BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
-        Bitmap bitmap = bitmapDrawable.getBitmap();
-
-        // Convert to byte to store
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-        return byteArrayOutputStream.toByteArray();
     }
 
     @Override
@@ -138,12 +99,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public boolean onOptionsItemSelected(MenuItem item) {
         // User clicked on the menu option in the app bar overflow menu.
         switch (item.getItemId()){
-            // Respond when clicked "Insert dummy data" menu option
-            case R.id.action_insert_dummy_data:
-                insertInventory();
-                Toast.makeText(this, "Dummy data insertion successful.",
-                        Toast.LENGTH_SHORT).show();
-                return true;
             // Respond when clicked "Delete all inventories" menu option
             case R.id.action_delete_all_entries:
                 showDeleteConfirmationDialog();
@@ -197,8 +152,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 InventoryEntry.COLUMN_INVENTORY_NAME,
                 InventoryEntry.COLUMN_INVENTORY_PRICE,
                 InventoryEntry.COLUMN_INVENTORY_QUANTITY,
-                InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER,
-                InventoryEntry.COLUMN_INVENTORY_EMAIL,
                 InventoryEntry.COLUMN_INVENTORY_IMAGE
         };
 

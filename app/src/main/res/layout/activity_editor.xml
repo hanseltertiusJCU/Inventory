@@ -119,8 +119,11 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:layout_marginLeft="8dp"
                 android:layout_marginRight="8dp"
                 android:id="@+id/decrease_quantity_button"
+                android:background="#D50000"
+                android:textColor="#ffffff"
                 android:text="-" />
 
             <!-- Product quantity field -->
@@ -140,7 +143,10 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginLeft="8dp"
+                android:layout_marginRight="8dp"
                 android:id="@+id/increase_quantity_button"
+                android:background="#388E3C"
+                android:textColor="#ffffff"
                 android:text="+" />
 
         </LinearLayout>
@@ -224,6 +230,7 @@
                 android:id="@+id/edit_product_email"
                 android:hint="goodgame@gmail.com"
                 android:inputType="textEmailAddress"
+                android:textAppearance="@style/Base.TextAppearance.AppCompat.Small"
                 style="@style/EditorFieldStyle" />
 
         </LinearLayout>

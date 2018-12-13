@@ -1,12 +1,15 @@
 package com.example.android.inventory;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -17,6 +20,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -59,8 +63,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     private static final int REQUEST_IMAGE_CAPTURE = 1;
 
-    /** int value for setup default quantity */
-    private int quantityInventory;
+    /** Temporary input values*/
+    String tempBrandText;
+    String tempNameText;
+    String tempPriceText;
+    String tempQuantityText;
+    String tempPhoneText;
+    String tempEmailText;
 
     /** URI for passing the data into */
     private Uri currentInventoryUri;
@@ -116,11 +125,24 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mEmailEditText.setOnTouchListener(mTouchListener);
         imageButton.setOnTouchListener(mTouchListener);
 
-        // Setup string value to get the default text of EditText value
-        String value = mQuantityEditText.getText().toString();
-
-        // Set the value for int variable based on default text
-        quantityInventory = Integer.parseInt(value);
+        // Check if a Bundle exists
+        if (savedInstanceState != null){
+            tempBrandText = savedInstanceState.getString("currentBrand");
+            tempNameText = savedInstanceState.getString("currentName");
+            tempPriceText = savedInstanceState.getString("currentPrice");
+            tempQuantityText = savedInstanceState.getString("currentQuantity");
+            tempPhoneText = savedInstanceState.getString("currentPhoneNumber");
+            tempEmailText = savedInstanceState.getString("currentEmail");
+            // Get the parcelable from onSaveInstanceState and set the ImageView from there
+            mBitmap = savedInstanceState.getParcelable("currentImage");
+            imageButton.setImageBitmap(mBitmap);
+            // Get the boolean value from onSaveInstanceState in order to verify the variable values
+            mHasImage = savedInstanceState.getBoolean("imageState");
+        } else {
+            // Set the quantityText in order not to give empty values on creating the activity
+            // exactly when creating a new inventory object
+            tempQuantityText = mQuantityEditText.getText().toString();
+        }
 
         // Reference to down button
         Button quantityDownButton = (Button) findViewById(R.id.decrease_quantity_button);
@@ -129,10 +151,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         quantityDownButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Parse the EditText values into integer
+                int quantity = Integer.parseInt(mQuantityEditText.getText().toString().trim());
                 // Check if quantity is more than 0
-                if (quantityInventory > 0){
-                    quantityInventory -= 1;
-                    mQuantityEditText.setText("" + quantityInventory);
+                if (quantity > 0){
+                    quantity -= 1;
+                    // Set the text from the resulted quantity
+                    mQuantityEditText.setText(Integer.toString(quantity));
                 } else {
                     Toast.makeText(getApplicationContext(), "Cannot enter negative values, " +
                             "the quantity must be more than or equal to 0", Toast.LENGTH_SHORT).show();
@@ -147,8 +172,11 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         quantityUpButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                quantityInventory += 1;
-                mQuantityEditText.setText("" + quantityInventory);
+                // Parse the EditText values into integer
+                int quantity = Integer.parseInt(mQuantityEditText.getText().toString().trim());
+                quantity += 1;
+                // Set the text from the resulted quantity
+                mQuantityEditText.setText(Integer.toString(quantity));
             }
         });
 
@@ -159,6 +187,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         callButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Store the values of edit text
+                tempBrandText = mBrandEditText.getText().toString().trim();
+                tempNameText = mNameEditText.getText().toString().trim();
+                tempPriceText = mPriceEditText.getText().toString().trim();
+                tempQuantityText = mQuantityEditText.getText().toString().trim();
+                tempPhoneText = mPhoneNumberEditText.getText().toString().trim();
+                tempEmailText = mEmailEditText.getText().toString().trim();
                 // Prompt into phone app
                 Intent callIntent = new Intent(Intent.ACTION_DIAL);
                 // Set the data into the destination
@@ -175,13 +210,20 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         emailButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_SENDTO);
-                intent.setData(Uri.parse("mailto:")); // only email apps should handle this
-                intent.putExtra(Intent.EXTRA_EMAIL, new String[] { mEmailEditText.getText().toString().trim() });
-                intent.putExtra(Intent.EXTRA_SUBJECT, "Order inventory item: " + mBrandEditText.getText().toString().trim() +
+                // Store the values of edit text
+                tempBrandText = mBrandEditText.getText().toString().trim();
+                tempNameText = mNameEditText.getText().toString().trim();
+                tempPriceText = mPriceEditText.getText().toString().trim();
+                tempQuantityText = mQuantityEditText.getText().toString().trim();
+                tempPhoneText = mPhoneNumberEditText.getText().toString().trim();
+                tempEmailText = mEmailEditText.getText().toString().trim();
+                Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+                emailIntent.setData(Uri.parse("mailto:")); // only email apps should handle this
+                emailIntent.putExtra(Intent.EXTRA_EMAIL, new String[] { mEmailEditText.getText().toString().trim() });
+                emailIntent.putExtra(Intent.EXTRA_SUBJECT, "Order inventory item: " + mBrandEditText.getText().toString().trim() +
                         " " + mNameEditText.getText().toString().trim());
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivity(intent);
+                if (emailIntent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(emailIntent);
                 }
             }
         });
@@ -192,8 +234,15 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Store the values of edit text
+                tempBrandText = mBrandEditText.getText().toString().trim();
+                tempNameText = mNameEditText.getText().toString().trim();
+                tempPriceText = mPriceEditText.getText().toString().trim();
+                tempQuantityText = mQuantityEditText.getText().toString().trim();
+                tempPhoneText = mPhoneNumberEditText.getText().toString().trim();
+                tempEmailText = mEmailEditText.getText().toString().trim();
                 // Create intent for camera
-                Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
+                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 if (cameraIntent.resolveActivity(getPackageManager()) != null) {
                     startActivityForResult(cameraIntent, REQUEST_IMAGE_CAPTURE);
                 }
@@ -232,108 +281,113 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      */
     private void saveInventory(){
 
+        // Create a ContentValues object where column names are the keys,
+        // and inventory attributes from the editor are the values.
+        ContentValues contentValues = new ContentValues();
+
+        // Read from input fields
+        // Use trim to eliminate leading or trailing white space
+        String brandString = mBrandEditText.getText().toString().trim();
+        String nameString = mNameEditText.getText().toString().trim();
+
+        double priceValue = 0.00;
+        String priceString = mPriceEditText.getText().toString().trim();
+
+        // Check if priceString has values, if not set the price value to 0 (by default)
+        if(!TextUtils.isEmpty(priceString)){
+            priceValue = Double.parseDouble(priceString);
+        }
+
+        String quantityString = mQuantityEditText.getText().toString().trim();
+
+        int quantityValue = 0;
+
+        // Check if quantityString has values, if not set the quantity value to 0 (by default)
+        if(!TextUtils.isEmpty(quantityString)){
+            quantityValue = Integer.parseInt(quantityString);
+        }
+
+        String phoneString = mPhoneNumberEditText.getText().toString().trim();
+        String emailString = mEmailEditText.getText().toString().trim();
+
+        // Check if the edit text values are all empty
+        if(currentInventoryUri == null &&
+                TextUtils.isEmpty(brandString) && TextUtils.isEmpty(nameString) &&
+                TextUtils.isEmpty(priceString) &&
+                TextUtils.isEmpty(phoneString) && TextUtils.isEmpty(emailString)){
+            blankEditorValues = true;
+            Toast.makeText(this, "There is an error with saving an inventory", Toast.LENGTH_SHORT).show();
+            // Return none instead of saving an inventory into the database
+            return;
+        }
+
+        // Use toast message when there is no string value in edit text, else we put the
+        // ContentValues based on columns
+        if (TextUtils.isEmpty(brandString)){
+            Toast.makeText(this, "Cannot enter empty brand value. " +
+                            "Please insert a brand." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(nameString)){
+            Toast.makeText(this, "Cannot enter empty name value. " +
+                            "Please insert a name." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(phoneString)){
+            Toast.makeText(this, "Cannot enter empty phone number. " +
+                            "Please insert your supplier phone number." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (TextUtils.isEmpty(emailString)){
+            Toast.makeText(this, "Cannot enter empty email. " +
+                            "Please insert your supplier email." ,
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_BRAND, brandString);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, nameString);
+
+        // We put the price and quantity value no matter the edit text value is empty or not
+        // as this is already being handled (shown above)
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, priceValue);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_QUANTITY, quantityValue);
+
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, phoneString);
+        contentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
+
+        if (mHasImage) {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            mBitmap.compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStream);
+            byte[] imageByte = byteArrayOutputStream.toByteArray();
+            contentValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, imageByte);
+        } else {
+            Toast.makeText(this, "Photo must be required",
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check if brandString, nameString, phoneString, emailString and image is not empty
+        if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
+                !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString) && mHasImage){
+            fulfilledData = true;
+        }
+
         // Check if the URI is null. If so, then we will insert a new inventory. Otherwise, it would
         // be just updating the existing inventory in order to prevent insertion of a new inventory
         // after updating the values of the existing inventory
         if(currentInventoryUri == null) {
 
-            // Create a ContentValues object where column names are the keys,
-            // and inventory attributes from the editor are the values.
-            ContentValues newContentValues = new ContentValues();
-
-            // Read from input fields
-            // Use trim to eliminate leading or trailing white space
-            String brandString = mBrandEditText.getText().toString().trim();
-            String nameString = mNameEditText.getText().toString().trim();
-
-            double priceValue = 0.00;
-            String priceString = mPriceEditText.getText().toString().trim();
-
-            // Check if priceString has values, if not set the price value to 0 (by default)
-            if(!TextUtils.isEmpty(priceString)){
-                priceValue = Double.parseDouble(priceString);
-            }
-
-            int quantityValue = 0;
-            String quantityString = mQuantityEditText.getText().toString().trim();
-
-            // Check if quantityString has values, if not set the quantity value to 0 (by default)
-            if(!TextUtils.isEmpty(quantityString)){
-                quantityValue = Integer.parseInt(quantityString);
-            }
-
-            String phoneString = mPhoneNumberEditText.getText().toString().trim();
-            String emailString = mEmailEditText.getText().toString().trim();
-
-            // Check if the edit text values are all empty
-            if(currentInventoryUri == null &&
-                    TextUtils.isEmpty(brandString) && TextUtils.isEmpty(nameString) &&
-                    TextUtils.isEmpty(priceString) &&
-                    TextUtils.isEmpty(phoneString) && TextUtils.isEmpty(emailString)){
-                blankEditorValues = true;
-                Toast.makeText(this, "There is an error with saving an inventory", Toast.LENGTH_SHORT).show();
-                // Return none instead of saving an inventory into the database
-                return;
-            }
-
-            // Use toast message when there is no string value in edit text, else we put the
-            // ContentValues based on columns
-            if (TextUtils.isEmpty(brandString)){
-                Toast.makeText(this, "Cannot enter empty brand value. " +
-                                "Please insert a brand." ,
-                        Toast.LENGTH_SHORT).show();
-            }
-
-            if (TextUtils.isEmpty(nameString)){
-                Toast.makeText(this, "Cannot enter empty name value. " +
-                                "Please insert a name." ,
-                        Toast.LENGTH_SHORT).show();
-            }
-
-            if (TextUtils.isEmpty(phoneString)){
-                Toast.makeText(this, "Cannot enter empty phone number. " +
-                                "Please insert your supplier phone number." ,
-                        Toast.LENGTH_SHORT).show();
-            }
-
-            if (TextUtils.isEmpty(emailString)){
-                Toast.makeText(this, "Cannot enter empty email. " +
-                                "Please insert your supplier email." ,
-                        Toast.LENGTH_SHORT).show();
-            }
-
-            newContentValues.put(InventoryEntry.COLUMN_INVENTORY_BRAND, brandString);
-            newContentValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, nameString);
-
-            // We put the price and quantity value no matter the edit text value is empty or not
-            // as this is already being handled (shown above)
-            newContentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, priceValue);
-            newContentValues.put(InventoryEntry.COLUMN_INVENTORY_QUANTITY, quantityValue);
-
-            newContentValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, phoneString);
-            newContentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
-
-            if (mHasImage) {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                mBitmap.compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStream);
-                byte[] imageByte = byteArrayOutputStream.toByteArray();
-                newContentValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, imageByte);
-            } else {
-                Toast.makeText(this, "Photo must be required",
-                        Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            // Check if brandString, nameString, phoneString and emailString is not empty
-            if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
-                    !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString)){
-                fulfilledData = true;
-            }
-
             if (fulfilledData){
                 Uri newUri = getContentResolver().insert(
                         InventoryEntry.CONTENT_URI,     // Content URI from InventoryEntry
-                        newContentValues                // The values to insert
+                        contentValues                // The values to insert
                 );
 
                 // Check if the Uri resulted from insert method in content resolver is null.
@@ -347,34 +401,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
         } else {
 
-            // Create a ContentValues object where column names are the keys,
-            // and inventory attributes from the editor are the values.
-            ContentValues existingContentValues = new ContentValues();
-
-            // Read from input fields
-            // Use trim to eliminate leading or trailing white space
-            String brandString = mBrandEditText.getText().toString().trim();
-            String nameString = mNameEditText.getText().toString().trim();
-
-            double priceValue = 0.00;
-            String priceString = mPriceEditText.getText().toString().trim();
-
-            // Check if priceString has values, if not set the price value to 0 (by default)
-            if(!TextUtils.isEmpty(priceString)){
-                priceValue = Double.parseDouble(priceString);
-            }
-
-            int quantityValue = 0;
-            String quantityString = mQuantityEditText.getText().toString().trim();
-
-            // Check if quantityString has values, if not set the quantity value to 0 (by default)
-            if(!TextUtils.isEmpty(quantityString)){
-                quantityValue = Integer.parseInt(quantityString);
-            }
-
-            String phoneString = mPhoneNumberEditText.getText().toString().trim();
-            String emailString = mEmailEditText.getText().toString().trim();
-
             // Check if the edit text values are all empty
             if(TextUtils.isEmpty(brandString) && TextUtils.isEmpty(nameString) &&
                     TextUtils.isEmpty(priceString) &&
@@ -385,62 +411,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 return;
             }
 
-            // Use toast message when there is no string value in edit text, else we put the
-            // ContentValues based on columns
-            if (TextUtils.isEmpty(brandString)){
-                Toast.makeText(this, "Cannot enter empty brand value. " +
-                                "Please insert a brand." ,
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_BRAND, brandString);
-            }
-
-            if (TextUtils.isEmpty(nameString)){
-                Toast.makeText(this, "Cannot enter empty name value. " +
-                                "Please insert a name." ,
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_NAME, nameString);
-            }
-
-            // We put the price and quantity value no matter the edit text value is empty or not
-            // as this is already being handled (shown above)
-            existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_PRICE, priceValue);
-            existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_QUANTITY, quantityValue);
-
-            if (TextUtils.isEmpty(phoneString)){
-                Toast.makeText(this, "Cannot enter empty phone number. " +
-                                "Please insert your supplier phone number." ,
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_PHONE_NUMBER, phoneString);
-            }
-
-            if (TextUtils.isEmpty(emailString)){
-                Toast.makeText(this, "Cannot enter empty email. " +
-                                "Please insert your supplier email." ,
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_EMAIL, emailString);
-            }
-
-            // Check if image exist
-            if (mHasImage) {
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                mBitmap.compress(Bitmap.CompressFormat.PNG, 0, byteArrayOutputStream);
-                byte[] imageByte = byteArrayOutputStream.toByteArray();
-                existingContentValues.put(InventoryEntry.COLUMN_INVENTORY_IMAGE, imageByte);
-            } else {
-                Toast.makeText(this, "Photo must be required",
-                        Toast.LENGTH_SHORT).show();
-            }
-
-            // Check if brandString, nameString, phoneString, emailString and image is not empty
-            if(!TextUtils.isEmpty(brandString) && !TextUtils.isEmpty(nameString) &&
-                    !TextUtils.isEmpty(phoneString) && !TextUtils.isEmpty(emailString) && mHasImage){
-                fulfilledData = true;
-            }
-
             if(fulfilledData){
                 // Otherwise this is an EXISTING inventory, so update the inventory
                 // with content URI: currentInventoryUri and pass in the new ContentValues.
@@ -449,7 +419,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 // in the database that we want to modify.
                 int rowsUpdated = getContentResolver().update(
                         currentInventoryUri,             // Content URI from InventoryEntry
-                        existingContentValues,           // The values to update
+                        contentValues,           // The values to update
                         null,
                         null
                 );
@@ -474,11 +444,12 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             Bundle extras = data.getExtras();
             mBitmap = (Bitmap) extras.get("data");
             mHasImage = true;
             imageButton.setImageBitmap(mBitmap);
+
         }
     }
 
@@ -704,6 +675,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             String phoneNumber = cursor.getString(phoneNumberStringColumn);
             String email = cursor.getString(emailStringColumn);
             byte[] image = cursor.getBlob(imageStringColumn);
+            // Check if image is not null, if so then set the image bitmap
             if (image != null) {
                 // Set the image existed status to true
                 mHasImage = true;
@@ -714,8 +686,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Update the views on the screen with the values from the database
             mBrandEditText.setText(brand);
             mNameEditText.setText(name);
-            mPriceEditText.setText(String.valueOf(price));
-            mQuantityEditText.setText(String.valueOf(quantity));
+            mPriceEditText.setText(Double.toString(price));
+            mQuantityEditText.setText(Integer.toString(quantity));
             mPhoneNumberEditText.setText(phoneNumber);
             mEmailEditText.setText(email);
             imageButton.setImageBitmap(mBitmap);
@@ -728,8 +700,35 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mBrandEditText.setText("");
         mNameEditText.setText("");
         mPriceEditText.setText("");
-        mQuantityEditText.setText(String.valueOf(1)); // Set default quantity value in EditText
+        mQuantityEditText.setText("");
         mPhoneNumberEditText.setText("");
         mEmailEditText.setText("");
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        // Save the state
+        outState.putString("currentBrand", mBrandEditText.getText().toString());
+        outState.putString("currentName", mNameEditText.getText().toString());
+        outState.putString("currentPrice", mPriceEditText.getText().toString());
+        outState.putString("currentQuantity", mQuantityEditText.getText().toString());
+        outState.putString("currentPhoneNumber", mPhoneNumberEditText.getText().toString());
+        outState.putString("currentEmail", mEmailEditText.getText().toString());
+        outState.putParcelable("currentImage", mBitmap);
+        outState.putBoolean("imageState", mHasImage);
+
+        super.onSaveInstanceState(outState);
+    }
+
+    // Take the value of suspended EditText values
+    @Override
+    protected void onResume() {
+        mBrandEditText.setText(tempBrandText);
+        mNameEditText.setText(tempNameText);
+        mPriceEditText.setText(tempPriceText);
+        mQuantityEditText.setText(tempQuantityText);
+        mPhoneNumberEditText.setText(tempPhoneText);
+        mEmailEditText.setText(tempEmailText);
+        super.onResume();
     }
 }
